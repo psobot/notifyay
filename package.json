@@ -1,4 +1,25 @@
-"dependencies": {
-  "postageapp": "> 0.1.0",
-  "request": ">= 2.11.4"
+{
+  "name": "Notifyay",
+  "version": "0.1.0",
+  "author": "Peter Sobot <hi@petersobot.com>",
+  "description": "a simple email-based website uptime monitor",
+  "main": "notifyay.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/psobot/notifyay.git"
+  },
+  "keywords": [
+    "uptime",
+    "monitor",
+    "email"
+  ],
+  "dependencies": {
+    "daemonize2": ">=0.4.0-rc.5",
+    "postageapp": "git://github.com/psobot/postageapp-nodejs.git#master",
+    "request": ">=2.11.4"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8.8"
+  }
 }
