@@ -81,8 +81,8 @@ var run = function() {
 
     r = "";
     if (hours) r += hours + " hours";
-    if (minutes) { if (r != "") r += ", "; r += minutes + " minutes"; }
-    if (seconds) { if (r != "") r += ", "; r += seconds + " seconds"; }
+    if (minutes) { if (r != "") r += ", "; r += Math.round(minutes) + " minutes"; }
+    if (seconds) { if (r != "") r += ", "; r += Math.round(seconds) + " seconds"; }
     return r;
   }
 
@@ -105,7 +105,10 @@ var run = function() {
         subject: "Oh noes! " + get_tld(site) + " is down!",
         from: config.sender,
         content: {
-            'text/plain': 'Notifyay just noticed an error on ' + get_tld(site) + ".\n" + text
+            'text/plain': 'Notifyay just noticed an error on ' + get_tld(site) + ".\n" + text + "\n"
+                          + "That URL went down between " +
+                          (new Date() - config.interval * 60 * 1000).toString()
+                          + " and " + (new Date()).toString() + "."
         }
       });
     }
@@ -123,7 +126,8 @@ var run = function() {
         from: config.sender,
         content: {
             'text/plain': 'Notifyay just noticed that ' + get_tld(site) + " is back up.\n" + 
-                          "It had been down for " + down_time(site) + "."
+                          "It went down at " + config.sites[site].toString() +
+                          ", and was down for " + down_time(site) + "."
         },
       });
     }
