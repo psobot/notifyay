@@ -1,0 +1,4 @@
+"dependencies": {
+  "postageapp": "> 0.1.0",
+  "request": ">= 2.11.4"
+}

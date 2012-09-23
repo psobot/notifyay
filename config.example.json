@@ -1,0 +1,10 @@
+{
+  "postageapp_api_key": "YOUR_API_KEY_HERE",
+  "interval": 5,
+  "sender": "YOUR_FROM_ADDRESS_HERE",
+  "recipients": ["YOUR_TO_ADDRESSes_HERE"],
+  "urls": [
+    "YOUR_URL_HERE",
+    "YOUR_URL_HERE"
+   ]
+}
