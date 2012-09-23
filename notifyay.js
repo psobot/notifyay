@@ -80,9 +80,9 @@ var run = function() {
     hours = parseInt(minutes / 60); minutes -= (60 * hours);
 
     r = "";
-    if (hours) r += hours + " hours";
-    if (minutes) { if (r != "") r += ", "; r += Math.round(minutes) + " minutes"; }
-    if (seconds) { if (r != "") r += ", "; r += Math.round(seconds) + " seconds"; }
+    if (Math.round(hours)) r += Math.round(hours) + " hours";
+    if (Math.round(minutes)) { if (r != "") r += ", "; r += Math.round(minutes) + " minutes"; }
+    if (Math.round(seconds)) { if (r != "") r += ", "; r += Math.round(seconds) + " seconds"; }
     return r;
   }
 
@@ -107,7 +107,7 @@ var run = function() {
         content: {
             'text/plain': 'Notifyay just noticed an error on ' + get_tld(site) + ".\n" + text + "\n"
                           + "That URL went down between " +
-                          (new Date() - config.interval * 60 * 1000).toString()
+                          (new Date(new Date() - config.interval * 60 * 1000)).toString()
                           + " and " + (new Date()).toString() + "."
         }
       });
