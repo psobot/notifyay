@@ -8,7 +8,8 @@
  */
 
 var request = require("request"),
-    fs      = require("fs");
+    fs      = require("fs"),
+    url     = require('url');
 
 var daemon = require("daemonize2").setup({
     main: "notifyay.js",
@@ -35,7 +36,11 @@ var run = function() {
     postage = require("postageapp")(config.postageapp_api_key);
     
     config.sites = {};
-    for (i in config.urls) config.sites[config.urls[i]] = null;
+    config.checks = {}
+    for (_url in config.urls) {
+      config.sites[_url] = true;
+      config.checks[_url] = config.urls[_url];
+    }
     console.log("Checking " + config.urls.length + " sites every " + config.interval + " minutes.");
     setInterval( check_sites, config.interval * 1000 * 60 );
     check_sites();
@@ -44,33 +49,51 @@ var run = function() {
   check_sites = function() {
     console.log("Starting check at " + new Date());
     for (site in config.sites) {
-      (function(site) {
-        console.log("Checking \"" + site + "\"...");
-        request({
-          uri: site,
-          method: 'HEAD'
-        }, function(error, response, body) {
-          if (error) {
-            console.log("Oh noes! \"" + site + "\" returned an error:");
-            console.log(error);
-            site_down(site, error);
-          } else if (response.statusCode != 200) {
-            console.log("Oh noes! \"" + site + "\" returned a " + response.statusCode + ".");
-            site_down(site, response.statusCode);
-          } else {
-            console.log("Got back " + response.statusCode + " for \"" + site + "\".");
-            site_up(site);
-          }
-        });
-      })(site);
+      if (config.checks[site] != null) {
+        (function(site) {
+          console.log("Checking \"" + site + "\" with a GET request...");
+          request({
+            uri: site,
+            method: 'GET'
+          }, function(error, response, body) {
+            if (error) {
+              console.log("Oh noes! \"" + site + "\" returned an error:");
+              console.log(error);
+              site_down(site, error);
+            } else if (response.statusCode != 200) {
+              console.log("Oh noes! \"" + site + "\" returned a " + response.statusCode + ".");
+              site_down(site, response.statusCode);
+            } else if (response.body.indexOf(config.checks[site]) == -1) {
+              console.log("Oh noes! \"" + site + "\" did not return \"" + config.checks[site] + "\".");
+              site_down(site, response.statusCode, "Text \"" + config.checks[site] + "\" not found in response.");
+            } else {
+              console.log("Got back " + response.statusCode + " for \"" + site + "\".");
+              site_up(site);
+            }
+          });
+        })(site);
+      } else {
+        (function(site) {
+          console.log("Checking \"" + site + "\" with a HEAD request...");
+          request({
+            uri: site,
+            method: 'HEAD'
+          }, function(error, response, body) {
+            if (error) {
+              console.log("Oh noes! \"" + site + "\" returned an error:");
+              console.log(error);
+              site_down(site, error);
+            } else if (response.statusCode != 200) {
+              console.log("Oh noes! \"" + site + "\" returned a " + response.statusCode + ".");
+              site_down(site, response.statusCode);
+            } else {
+              console.log("Got back " + response.statusCode + " for \"" + site + "\".");
+              site_up(site);
+            }
+          });
+        })(site);
+      }
     }
-  }
-
-  //  This is really rough, doesn't account for any flexible URLs
-  //  TODO: I'd vastly prefer to abstract this out to a library later
-  get_tld = function(site) {
-    p = site.split('.')
-    return p[p.length-2] + "." + p[p.length-1].replace("/", "");
   }
 
   down_time = function(site) {
@@ -86,11 +109,13 @@ var run = function() {
     return r;
   }
 
-  site_down = function(site, error) {
+  site_down = function(site, error, failure) {
     text = "";
     if (isNaN(error)) {
       //  We have an error string or object here.
       text = "Error encountered while requesting " + site + ":\n" + error.toString();
+    } else if (typeof failure !== "undefined") {
+      text = failure;
     } else {
       //  We just have a bad response code.
       text = "Server returned an HTTP " + error + ".";
@@ -98,14 +123,13 @@ var run = function() {
 
     if (config.sites[site] === true) { 
       //  Send email to user informing them their site is down.
-      //  Only send this email if the site hasn't already been down for a while.
       console.log("Sending email to inform user that " + site + " is down.");
       postage.sendMessage({ 
         recipients: config.recipients,
-        subject: "Oh noes! " + get_tld(site) + " is down!",
-        from: config.sender,
+        subject: "Oh noes! " + url.parse(site).hostname + " is down!",
+        from: config.sender + "+" + Math.round(Math.random() * 100) + "@" + config.sender_domain,
         content: {
-            'text/plain': 'Notifyay just noticed an error on ' + get_tld(site) + ".\n" + text + "\n"
+            'text/plain': 'Notifyay just noticed an error on ' + url.parse(site).hostname + ".\n" + text + "\n"
                           + "That URL went down between " +
                           (new Date(new Date() - config.interval * 60 * 1000)).toString()
                           + " and " + (new Date()).toString() + "."
@@ -122,10 +146,10 @@ var run = function() {
       console.log("Sending email to inform user that " + site + " is back up.");
       postage.sendMessage({ 
         recipients: config.recipients,
-        subject: "Huzzah! " + get_tld(site) + " is back up!",
-        from: config.sender,
+        subject: "Huzzah! " + url.parse(site).hostname + " is back up!",
+        from: config.sender + "+" + Math.round(Math.random() * 100) + "@" + config.sender_domain,
         content: {
-            'text/plain': 'Notifyay just noticed that ' + get_tld(site) + " is back up.\n" + 
+            'text/plain': 'Notifyay just noticed that ' + url.parse(site).hostname + " is back up.\n" + 
                           "It went down at " + config.sites[site].toString() +
                           ", and was down for " + down_time(site) + "."
         },

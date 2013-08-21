@@ -1,10 +1,11 @@
 {
   "postageapp_api_key": "YOUR_API_KEY_HERE",
   "interval": 5,
-  "sender": "YOUR_FROM_ADDRESS_HERE",
+  "sender": "YOUR_FROM_ADDRESS_NAME",
+  "sender_domain": "YOUR_FROM_DOMAIN",
   "recipients": ["YOUR_TO_ADDRESSes_HERE"],
-  "urls": [
-    "YOUR_URL_HERE",
-    "YOUR_URL_HERE"
-   ]
+  "urls": {
+    "YOUR_URL_HERE": null,
+    "YOUR_URL_HERE": "string_that_should_exist_in_GET_body",
+  }
 }
