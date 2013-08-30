@@ -39,7 +39,7 @@ To stop a running notifyay process:
       //    Your API key here.  
       "postageapp_api_key": "YOUR_API_KEY_HERE",
 
-      //    The interval (in seconds) between checks of every site.
+      //    The interval (in minutes) between checks of every site.
       //    Note that if this is too small, you might hammer your
       //    site with GET or HEAD requests.
       "interval": 5,
