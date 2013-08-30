@@ -65,7 +65,7 @@ var run = function() {
               site_down(site, response.statusCode);
             } else if (response.body.indexOf(config.checks[site]) == -1) {
               console.log("Oh noes! \"" + site + "\" did not return \"" + config.checks[site] + "\".");
-              site_down(site, response.statusCode, "Text \"" + config.checks[site] + "\" not found in response.");
+              site_down(site, response.statusCode, "Text \"" + config.checks[site] + "\" not found in response. Response was:\n\n" + response.body);
             } else {
               console.log("Got back " + response.statusCode + " for \"" + site + "\".");
               site_up(site);
@@ -121,21 +121,19 @@ var run = function() {
       text = "Server returned an HTTP " + error + ".";
     }
 
-    if (config.sites[site] === true) { 
-      //  Send email to user informing them their site is down.
-      console.log("Sending email to inform user that " + site + " is down.");
-      postage.sendMessage({ 
-        recipients: config.recipients,
-        subject: "Oh noes! " + url.parse(site).hostname + " is down!",
-        from: config.sender + "+" + Math.round(Math.random() * 100) + "@" + config.sender_domain,
-        content: {
-            'text/plain': 'Notifyay just noticed an error on ' + url.parse(site).hostname + ".\n" + text + "\n"
-                          + "That URL went down between " +
-                          (new Date(new Date() - config.interval * 60 * 1000)).toString()
-                          + " and " + (new Date()).toString() + "."
-        }
-      });
-    }
+    //  Send email to user informing them their site is down.
+    console.log("Sending email to inform user that " + site + " is down.");
+    postage.sendMessage({ 
+      recipients: config.recipients,
+      subject: "Oh noes! " + url.parse(site).hostname + " is down!",
+      from: config.sender + "+" + Math.round(Math.random() * 100) + "@" + config.sender_domain,
+      content: {
+          'text/plain': 'Notifyay just noticed an error at ' + site + ".\n" + text + "\n"
+                        + "That URL went down between " +
+                        (new Date(new Date() - config.interval * 60 * 1000)).toString()
+                        + " and " + (new Date()).toString() + "."
+      }
+    });
 
     config.sites[site] = new Date();
   }
@@ -149,7 +147,7 @@ var run = function() {
         subject: "Huzzah! " + url.parse(site).hostname + " is back up!",
         from: config.sender + "+" + Math.round(Math.random() * 100) + "@" + config.sender_domain,
         content: {
-            'text/plain': 'Notifyay just noticed that ' + url.parse(site).hostname + " is back up.\n" + 
+            'text/plain': 'Notifyay just noticed that ' + site + " is back up.\n" + 
                           "It went down at " + config.sites[site].toString() +
                           ", and was down for " + down_time(site) + "."
         },
